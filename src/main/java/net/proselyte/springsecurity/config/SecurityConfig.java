@@ -1,7 +1,9 @@
 package net.proselyte.springsecurity.config;
 
+import net.proselyte.springsecurity.model.Role;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -17,9 +19,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
+                .csrf().disable()
                 .authorizeRequests()
-                .antMatchers("/")
-                .permitAll()
+                .antMatchers("/").permitAll()
+                .antMatchers(HttpMethod.GET, "/api/**").hasAnyRole(Role.ADMIN.name(), Role.USER.name())
+                .antMatchers(HttpMethod.POST, "/api/**").hasRole(Role.ADMIN.name())
+                .antMatchers(HttpMethod.DELETE, "/api/**").hasRole(Role.ADMIN.name())
                 .anyRequest()
                 .authenticated()
                 .and()
@@ -30,17 +35,22 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected UserDetailsService userDetailsService() {
         return new InMemoryUserDetailsManager(
-                User.builder().username("proselyte")
+                User.builder().username("admin")
                         // Use without encode first
-                        .password(passwordEncoder().encode("proselyte"))
-                        .roles("ADMIN")
+                        .password(passwordEncoder().encode("admin"))
+                        .roles(Role.ADMIN.name())
+                        .build(),
+                User.builder().username("user")
+                        // Use without encode first
+                        .password(passwordEncoder().encode("user"))
+                        .roles(Role.USER.name())
                         .build()
         );
         // Go to UserDetailsServiceImpl - InMemory
     }
 
     @Bean
-    protected PasswordEncoder passwordEncoder(){
+    protected PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(12);
     }
 }
