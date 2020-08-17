@@ -1,5 +1,6 @@
 package net.proselyte.springsecuritydemo.config;
 
+import net.proselyte.springsecuritydemo.model.Permission;
 import net.proselyte.springsecuritydemo.model.Role;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,9 +24,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .csrf().disable()
                 .authorizeRequests()
                 .antMatchers("/").permitAll()
-                .antMatchers(HttpMethod.GET, "/api/**").hasAnyRole(Role.ADMIN.name(), Role.USER.name())
-                .antMatchers(HttpMethod.POST, "/api/**").hasRole(Role.ADMIN.name())
-                .antMatchers(HttpMethod.DELETE, "/api/**").hasRole(Role.ADMIN.name())
+                .antMatchers(HttpMethod.GET, "/api/**").hasAuthority(Permission.DEVELOPERS_READ.getPermission())
+                .antMatchers(HttpMethod.POST, "/api/**").hasAuthority(Permission.DEVELOPERS_WRITE.getPermission())
+                .antMatchers(HttpMethod.DELETE, "/api/**").hasAuthority(Permission.DEVELOPERS_WRITE.getPermission())
                 .anyRequest()
                 .authenticated()
                 .and()
@@ -39,12 +40,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 User.builder()
                         .username("admin")
                         .password(passwordEncoder().encode("admin"))
-                        .roles(Role.ADMIN.name())
+                        .authorities(Role.ADMIN.getAuthorities())
                         .build(),
                 User.builder()
                         .username("user")
                         .password(passwordEncoder().encode("user"))
-                        .roles(Role.USER.name())
+                        .authorities(Role.USER.getAuthorities())
                         .build()
         );
     }
